@@ -1,0 +1,151 @@
+#include <stdio.h>
+
+#define MAX_FRAMES 10
+#define MAX_PAGES 30
+
+void printFrames(int frames[], int frame_count) {
+    for (int i = 0; i < frame_count; i++) {
+        if (frames[i] == -1)
+            printf(" - ");
+        else
+            printf(" %d ", frames[i]);
+    }
+    printf("\n");
+}
+
+void FCFS(int pages[], int page_count, int frame_count) {
+    int frames[MAX_FRAMES];
+    int front = 0, page_faults = 0;
+
+    for (int i = 0; i < frame_count; i++)
+        frames[i] = -1;  // Initialize frames as empty
+
+    printf("\nFCFS Page Replacement:\n");
+    for (int i = 0; i < page_count; i++) {
+        int found = 0;
+        for (int j = 0; j < frame_count; j++) {
+            if (frames[j] == pages[i]) {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found) {
+            frames[front] = pages[i];
+            front = (front + 1) % frame_count;
+            page_faults++;
+        }
+
+        printFrames(frames, frame_count);
+    }
+    printf("Total Page Faults (FCFS): %d\n", page_faults);
+}
+
+void LRU(int pages[], int page_count, int frame_count) {
+    int frames[MAX_FRAMES];
+    int recent[MAX_FRAMES];
+    int page_faults = 0;
+
+    for (int i = 0; i < frame_count; i++) {
+        frames[i] = -1;
+        recent[i] = 0;
+    }
+
+    printf("\nLRU Page Replacement:\n");
+    for (int i = 0; i < page_count; i++) {
+        int found = 0;
+        for (int j = 0; j < frame_count; j++) {
+            if (frames[j] == pages[i]) {
+                found = 1;
+                recent[j] = i;
+                break;
+            }
+        }
+
+        if (!found) {
+            int lru_index = 0;
+            for (int j = 1; j < frame_count; j++) {
+                if (recent[j] < recent[lru_index]) {
+                    lru_index = j;
+                }
+            }
+            frames[lru_index] = pages[i];
+            recent[lru_index] = i;
+            page_faults++;
+        }
+
+        printFrames(frames, frame_count);
+    }
+    printf("Total Page Faults (LRU): %d\n", page_faults);
+}
+
+void Optimal(int pages[], int page_count, int frame_count) {
+    int frames[MAX_FRAMES];
+    int page_faults = 0;
+
+    for (int i = 0; i < frame_count; i++)
+        frames[i] = -1;
+
+    printf("\nOptimal Page Replacement:\n");
+    for (int i = 0; i < page_count; i++) {
+        int found = 0;
+        for (int j = 0; j < frame_count; j++) {
+            if (frames[j] == pages[i]) {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found) {
+            int farthest = i + 1, replace_index = -1;
+
+            for (int j = 0; j < frame_count; j++) {
+                int k;
+                for (k = i + 1; k < page_count; k++) {
+                    if (frames[j] == pages[k]) {
+                        if (k > farthest) {
+                            farthest = k;
+                            replace_index = j;
+                        }
+                        break;
+                    }
+                }
+                if (k == page_count) {  // No future use found
+                    replace_index = j;
+                    break;
+                }
+            }
+
+            if (replace_index == -1) replace_index = 0; // Default replace if none found
+            frames[replace_index] = pages[i];
+            page_faults++;
+        }
+
+        printFrames(frames, frame_count);
+    }
+    printf("Total Page Faults (Optimal): %d\n", page_faults);
+}
+
+int main() {
+    int pages[MAX_PAGES], page_count, frame_count;
+
+    printf("Enter number of pages: ");
+    scanf("%d", &page_count);
+    printf("Enter page references: ");
+    for (int i = 0; i < page_count; i++) {
+        scanf("%d", &pages[i]);
+    }
+
+    printf("Enter number of frames (minimum 3): ");
+    scanf("%d", &frame_count);
+    if (frame_count < 3) {
+        printf("Frame count should be at least 3.\n");
+        return 1;
+    }
+
+    FCFS(pages, page_count, frame_count);
+    LRU(pages, page_count, frame_count);
+    Optimal(pages, page_count, frame_count);
+
+    return 0;
+}

@@ -1,0 +1,66 @@
+//server.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#define SHM_SIZE 1024  // Shared memory size
+
+int main() {
+    key_t key = ftok("shmfile", 65); // Generate unique key
+    int shmid = shmget(key, SHM_SIZE, 0666 | IPC_CREAT); // Create shared memory segment
+    char *str = (char *)shmat(shmid, NULL, 0); // Attach to the segment
+
+    // Write a message to the shared memory segment
+    printf("Server: Writing message to shared memory...\n");
+    strcpy(str, "Hello from the Server!");
+    printf("Server: Message written: %s\n", str);
+
+    // Wait for client to read the message
+    printf("Server: Waiting for client to read...\n");
+    sleep(10); // Sleep for a while to give the client time to read
+
+    // Detach from shared memory
+    shmdt(str);
+    shmctl(shmid, IPC_RMID, NULL); // Remove shared memory segment
+
+    return 0;
+}
+
+
+//client.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+
+#define SHM_SIZE 1024  // Shared memory size
+
+int main() {
+    key_t key = ftok("shmfile", 65); // Generate unique key
+    int shmid = shmget(key, SHM_SIZE, 0666); // Access shared memory segment
+    char *str = (char *)shmat(shmid, NULL, 0); // Attach to the segment
+
+    // Read the message from shared memory segment
+    printf("Client: Reading message from shared memory...\n");
+    printf("Client: Message read: %s\n", str);
+
+    // Detach from shared memory
+    shmdt(str);
+
+    return 0;
+}
+
+
+///compile the program
+gcc server.c -o server
+gcc client.c -o client
+
+./server.c
+./client.c

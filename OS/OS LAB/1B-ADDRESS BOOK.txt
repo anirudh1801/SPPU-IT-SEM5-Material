@@ -1,0 +1,77 @@
+
+ADDRESS_BOOK="address_book.txt"
+
+# Create address book (initialize the file)
+create_address_book() {
+    if [ ! -f "$ADDRESS_BOOK" ]; then
+        touch "$ADDRESS_BOOK"
+        echo "Address book created."
+    else
+        echo "Address book already exists."
+    fi
+}
+
+# View address book
+view_address_book() {
+    if [ -s "$ADDRESS_BOOK" ]; then
+        cat "$ADDRESS_BOOK"
+    else
+        echo "Address book is empty."
+    fi
+}
+
+# Insert a record
+insert_record() {
+    echo "Enter Name:"
+    read name
+    echo "Enter Phone:"
+    read phone
+    echo "Enter Email:"
+    read email
+    echo "$name, $phone, $email" >> "$ADDRESS_BOOK"
+    echo "Record added."
+}
+
+# Delete a record by name
+delete_record() {
+    echo "Enter Name to delete:"
+    read name
+    grep -v "^$name, " "$ADDRESS_BOOK" > temp.txt && mv temp.txt "$ADDRESS_BOOK"
+    echo "Record deleted if it existed."
+}
+
+# Modify a record by name
+modify_record() {
+    echo "Enter Name to modify:"
+    read name
+    grep -v "^$name, " "$ADDRESS_BOOK" > temp.txt
+    mv temp.txt "$ADDRESS_BOOK"
+    echo "Enter new Phone:"
+    read phone
+    echo "Enter new Email:"
+    read email
+    echo "$name, $phone, $email" >> "$ADDRESS_BOOK"
+    echo "Record modified."
+}
+
+# Main menu
+while true; do
+    echo "Choose an option:"
+    echo "a) Create address book"
+    echo "b) View address book"
+    echo "c) Insert a record"
+    echo "d) Delete a record"
+    echo "e) Modify a record"
+    echo "f) Exit"
+    read choice
+
+    case $choice in
+        a) create_address_book ;;
+        b) view_address_book ;;
+        c) insert_record ;;
+        d) delete_record ;;
+        e) modify_record ;;
+        f) echo "Exiting..."; break ;;
+        *) echo "Invalid option. Please try again." ;;
+    esac
+done

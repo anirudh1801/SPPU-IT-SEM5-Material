@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <time.h>
+#include <stdbool.h>
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  // Mutex for reader count
+pthread_mutex_t rw_mutex = PTHREAD_MUTEX_INITIALIZER;  // Mutex for resource access
+int reader_count = 0;  // Track active readers
+bool stop_execution = false;  // Flag to stop execution after time limit
+
+// Time limit in seconds for program execution
+const int TIME_LIMIT = 10; 
+
+void *reader(void *arg) {
+    int reader_id = *(int *)arg;
+    
+    while (!stop_execution) {
+        // Entry section for reader
+        pthread_mutex_lock(&mutex);
+        reader_count++;
+        
+        // First reader locks the resource
+        if (reader_count == 1) {
+            pthread_mutex_lock(&rw_mutex);
+        }
+        pthread_mutex_unlock(&mutex);
+        
+        // Reading section
+        printf("Reader %d is reading the resource.\n", reader_id);
+        sleep(1);  // Simulate reading time
+        
+        // Exit section for reader
+        pthread_mutex_lock(&mutex);
+        reader_count--;
+        
+        // Last reader unlocks the resource
+        if (reader_count == 0) {
+            pthread_mutex_unlock(&rw_mutex);
+        }
+        pthread_mutex_unlock(&mutex);
+        
+        sleep(1);  // Wait before trying to read again
+    }
+    
+    return NULL;
+}
+
+void *writer(void *arg) {
+    int writer_id = *(int *)arg;
+    
+    while (!stop_execution) {
+        // Entry section for writer
+        pthread_mutex_lock(&rw_mutex);
+        
+        // Writing section
+        printf("Writer %d is writing to the resource.\n", writer_id);
+        sleep(1);  // Simulate writing time
+        
+        // Exit section for writer
+        pthread_mutex_unlock(&rw_mutex);
+        
+        sleep(2);  // Wait before trying to write again
+    }
+    
+    return NULL;
+}
+
+int main() {
+    int num_readers = 5;
+    int num_writers = 2;
+    
+    pthread_t readers[num_readers], writers[num_writers];
+    int reader_ids[num_readers], writer_ids[num_writers];
+    
+    // Record start time
+    time_t start_time = time(NULL);
+    
+    // Create reader threads
+    for (int i = 0; i < num_readers; i++) {
+        reader_ids[i] = i + 1;
+        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+    }
+    
+    // Create writer threads
+    for (int i = 0; i < num_writers; i++) {
+        writer_ids[i] = i + 1;
+        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+    }
+    
+    // Run for TIME_LIMIT seconds
+    while (difftime(time(NULL), start_time) < TIME_LIMIT) {
+        sleep(1);  // Check every second
+    }
+    
+    // Set stop_execution flag to true to stop all threads
+    stop_execution = true;
+    
+    // Join reader and writer threads
+    for (int i = 0; i < num_readers; i++) {
+        pthread_join(readers[i], NULL);
+    }
+    for (int i = 0; i < num_writers; i++) {
+        pthread_join(writers[i], NULL);
+    }
+    
+    // Clean up
+    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&rw_mutex);
+    
+    printf("Execution completed. Program stopped after %d seconds.\n", TIME_LIMIT);
+    return 0;
+}

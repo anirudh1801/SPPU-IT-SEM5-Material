@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define QUANTUM 2  // Quantum time for Round Robin
+
+// Process structure
+typedef struct {
+    int pid;        // Process ID
+    int arrival;    // Arrival time
+    int burst;      // Burst time
+    int remaining;  // Remaining burst time
+    bool completed; // Completion status
+} Process;
+
+// Function to find process with shortest remaining time
+int findShortestJob(Process processes[], int n, int current_time) {
+    int shortest = -1;
+    int shortest_burst = 999999; // Assume large initial burst time
+    
+    for (int i = 0; i < n; ++i) {
+        if (!processes[i].completed && processes[i].arrival <= current_time) {
+            if (processes[i].remaining < shortest_burst) {
+                shortest_burst = processes[i].remaining;
+                shortest = i;
+            }
+        }
+    }
+    
+    return shortest;
+}
+
+// Function to execute Shortest Job First (Preemptive) scheduling
+void shortestJobFirst(Process processes[], int n) {
+    int current_time = 0;
+    int completed = 0;
+    
+    while (completed != n) {
+        int shortest_index = findShortestJob(processes, n, current_time);
+        
+        if (shortest_index == -1) {
+            printf("No process available at time %d\n", current_time);
+            current_time++;
+            continue;
+        }
+        
+        // Execute the shortest job
+        printf("Executing process %d at time %d\n", processes[shortest_index].pid, current_time);
+        processes[shortest_index].remaining--;
+        current_time++;
+        
+        // Check if process is completed
+        if (processes[shortest_index].remaining == 0) {
+            processes[shortest_index].completed = true;
+            completed++;
+            printf("Process %d completed at time %d\n", processes[shortest_index].pid, current_time);
+        }
+    }
+}
+
+// Function to execute Round Robin scheduling
+void roundRobin(Process processes[], int n) {
+    int current_time = 0;
+    int completed = 0;
+    
+    while (completed != n) {
+        for (int i = 0; i < n; ++i) {
+            if (!processes[i].completed && processes[i].arrival <= current_time) {
+                // Execute the process for the quantum or remaining burst time
+                int execute_time = (processes[i].remaining > QUANTUM) ? QUANTUM : processes[i].remaining;
+                
+                printf("Executing process %d from time %d to %d\n", processes[i].pid, current_time, current_time + execute_time);
+                
+                // Update remaining time
+                processes[i].remaining -= execute_time;
+                current_time += execute_time;
+                
+                // Check if process is completed
+                if (processes[i].remaining == 0) {
+                    processes[i].completed = true;
+                    completed++;
+                    printf("Process %d completed at time %d\n", processes[i].pid, current_time);
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    // Example processes with different arrival times and burst times
+    Process processes_sjf[] = {
+        {1, 0, 3, 3, false},
+        {2, 2, 6, 6, false},
+        {3, 4, 4, 4, false},
+        {4, 6, 5, 5, false}
+    };
+    
+    Process processes_rr[] = {
+        {1, 0, 4, 4, false},
+        {2, 1, 3, 3, false},
+        {3, 2, 1, 1, false},
+        {4, 3, 2, 2, false}
+    };
+    
+    int n_sjf = sizeof(processes_sjf) / sizeof(processes_sjf[0]);
+    int n_rr = sizeof(processes_rr) / sizeof(processes_rr[0]);
+    
+    printf("Shortest Job First (Preemptive) Scheduling\n");
+    shortestJobFirst(processes_sjf, n_sjf);
+    
+    printf("\nRound Robin Scheduling with Quantum = %d\n", QUANTUM);
+    roundRobin(processes_rr, n_rr);
+    
+    return 0;
+}

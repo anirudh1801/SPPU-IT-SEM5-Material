@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
+#define FIFO1 "/tmp/fifo1"
+#define FIFO2 "/tmp/fifo2"
+#define MAX_BUF 1024
+
+void process1() {
+    int fd;
+    char sentence[MAX_BUF];
+
+    // Open FIFO1 for writing
+    mkfifo(FIFO1, 0666);
+    mkfifo(FIFO2, 0666);
+
+    while (1) {
+        printf("Enter a sentence (type 'exit' to quit): ");
+        fgets(sentence, MAX_BUF, stdin);
+        sentence[strcspn(sentence, "\n")] = 0; // Remove newline
+
+        // Break loop if user types "exit"
+        if (strcmp(sentence, "exit") == 0) {
+            break;
+        }
+
+        // Write sentence to FIFO1
+        fd = open(FIFO1, O_WRONLY);
+        write(fd, sentence, strlen(sentence) + 1);
+        close(fd);
+        
+        // Read result from FIFO2
+        fd = open(FIFO2, O_RDONLY);
+        char result[MAX_BUF];
+        read(fd, result, sizeof(result));
+        close(fd);
+
+        // Display result
+        printf("Counts received: %s\n", result);
+    }
+
+    // Clean up
+    unlink(FIFO1);
+    unlink(FIFO2);
+}
+
+void process2() {
+    int fd;
+    char sentence[MAX_BUF];
+
+    while (1) {
+        // Read sentence from FIFO1
+        fd = open(FIFO1, O_RDONLY);
+        read(fd, sentence, sizeof(sentence));
+        close(fd);
+        
+        if (strcmp(sentence, "exit") == 0) {
+            break;
+        }
+
+        // Count characters, words, and lines
+        int chars = strlen(sentence);
+        int words = 0;
+        int lines = 0;
+
+        // Count words by splitting sentence
+        char *token = strtok(sentence, " ");
+        while (token != NULL) {
+            words++;
+            token = strtok(NULL, " ");
+        }
+        lines = 1; // Assuming each sentence is a new line
+
+        // Prepare output to be written to file
+        char output[MAX_BUF];
+        snprintf(output, sizeof(output), "Characters: %d, Words: %d, Lines: %d\n", chars, words, lines);
+
+        // Write output to file
+        FILE *file = fopen("output.txt", "a");
+        fputs(output, file);
+        fclose(file);
+
+        // Write contents of the file back to FIFO2
+        fd = open(FIFO2, O_WRONLY);
+        write(fd, output, strlen(output) + 1);
+        close(fd);
+    }
+}
+
+int main() {
+    if (fork() == 0) {
+        // Child process runs process2
+        process2();
+    } else {
+        // Parent process runs process1
+        process1();
+    }
+    return 0;
+}

@@ -1,0 +1,108 @@
+
+# Assignment 1: Basic Linux Commands
+# 1. echo: Display text on the screen
+echo "Echo command: Displaying Hello, World!"
+# 2. ls: List files and directories
+echo -e "\nls command: List files in the current directory."
+ls
+# 3. read: Take input from the user
+echo -e "\nread command: Please enter your name:"
+read name
+echo "Hello, $name!"
+# 4. cat: Create and display content of a file
+echo -e "\ncat command: Creating and displaying content of 'example.txt'."
+echo "This is a sample text for the cat command." > example.txt
+cat example.txt
+# 5. touch: Create an empty file
+echo -e "\ntouch command: Creating an empty file named 'newfile.txt'."
+touch newfile.txt
+ls
+# 6. test: Evaluate conditions
+echo -e "\ntest command: Checking if 'newfile.txt' exists."
+if test -f newfile.txt; then
+    echo "File 'newfile.txt' exists."
+else
+    echo "File 'newfile.txt' does not exist."
+fi
+# 7. Arithmetic comparison using (( ))
+echo -e "\nArithmetic comparison: Comparing two numbers (num1 and num2)."
+num1=5
+num2=10
+if (( num1 < num2 )); then
+    echo "$num1 is less than $num2"
+fi
+# 8. Conditional loops (for loop)
+echo -e "\nfor loop: Display numbers from 1 to 3."
+for i in {1..3}; do
+    echo "Number: $i"
+done
+# 9. while loop
+echo -e "\nwhile loop: Countdown from 3 to 1."
+counter=3
+while [ $counter -gt 0 ]; do
+    echo "$counter"
+    ((counter--))
+done
+# 10. grep: Search for a pattern in a file
+echo -e "\ngrep command: Searching for 'sample' in 'example.txt'."
+grep "sample" example.txt
+# 11. sed: Substitute text in a file
+echo -e "\nsed command: Replacing 'sample' with 'test' in 'example.txt'."
+sed -i 's/sample/test/' example.txt
+cat example.txt
+# Additional Commands
+# 12. pwd: Display the current directory
+echo -e "\npwd command: Displaying the current directory."
+pwd
+# 13. mkdir: Create a new directory
+echo -e "\nmkdir command: Creating a directory named 'newdir'."
+mkdir newdir
+ls
+# 14. rmdir: Remove an empty directory
+echo -e "\nrmdir command: Removing the 'newdir' directory."
+rmdir newdir
+# 15. cp: Copy files or directories
+echo -e "\ncp command: Copying 'example.txt' to 'copy_example.txt'."
+cp example.txt copy_example.txt
+ls
+# 16. mv: Move or rename files
+echo -e "\nmv command: Renaming 'copy_example.txt' to 'renamed_example.txt'."
+mv copy_example.txt renamed_example.txt
+ls
+# 17. head: Display the first lines of a file
+echo -e "\nhead command: Display first line of 'example.txt'."
+head -n 1 example.txt
+
+# 18. tail: Display the last lines of a file
+echo -e "\ntail command: Display last line of 'example.txt'."
+tail -n 1 example.txt
+# 19. wc: Count lines, words, and characters in a file
+echo -e "\nwc command: Counting lines, words, and characters in 'example.txt'."
+wc example.txt
+# 20. chmod: Change file permissions
+echo -e "\nchmod command: Changing 'example.txt' to read-only."
+chmod 444 example.txt
+ls -l example.txt
+# 21. find: Search for files and directories
+echo -e "\nfind command: Searching for 'example.txt' in the current directory."
+find . -name "example.txt"
+# 22. du: Disk usage of files and directories
+echo -e "\ndu command: Display disk usage of the current directory."
+du -sh .
+# 23. df: Display free disk space
+echo -e "\ndf command: Display free disk space on the system."
+df -h
+# 24. history: Show command history
+echo -e "\nhistory command: Display last few commands executed."
+history | tail -n 
+# 25. tar: Archive files
+echo -e "\ntar command: Archiving 'example.txt' into 'example.tar'."
+tar -cvf example.tar example.txt
+ls
+# Clean up generated files
+rm example.txt renamed_example.txt example.tar
+echo -e "\nCleanup complete."
+
+////command to run the file
+ ----------- chmod +x filename.sh
+------------ ./filename.sh

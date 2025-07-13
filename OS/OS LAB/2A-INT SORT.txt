@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+
+#define MAX 20
+
+// Function for Bubble Sort (used by parent process)
+void bubble_sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Function for Selection Sort (used by child process)
+void selection_sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        int min_index = i;
+        for (int j = i + 1; j < n; j++) {
+            if (arr[j] < arr[min_index]) {
+                min_index = j;
+            }
+        }
+        // Swap the found minimum element with the first element
+        int temp = arr[min_index];
+        arr[min_index] = arr[i];
+        arr[i] = temp;
+    }
+}
+
+// Function to print an array
+void print_array(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+int main() {
+    int n, i;
+    int arr[MAX];
+
+    // Accept array size and elements from the user
+    printf("Enter the number of integers to sort: ");
+    scanf("%d", &n);
+    printf("Enter the integers:\n");
+    for (i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    // Create a child process
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("Fork failed");
+        exit(1);
+    } else if (pid == 0) {
+        // Child process - Orphan state
+        sleep(2);  // Sleep to allow parent to exit first
+        printf("\n[Child] Performing selection sort...\n");
+        selection_sort(arr, n);
+        printf("[Child] Sorted array using selection sort: ");
+        print_array(arr, n);
+
+        sleep(5);  // Ensure parent exits, demonstrating orphan state
+        printf("[Child] Child process PID: %d, New PPID: %d (init)\n", getpid(), getppid());
+
+        exit(0);  // Child process exits
+    } else {
+        // Parent process
+        printf("\n[Parent] Performing bubble sort...\n");
+        bubble_sort(arr, n);
+        printf("[Parent] Sorted array using bubble sort: ");
+        print_array(arr, n);
+
+        // Demonstrate zombie state
+        sleep(15);  // Parent sleeps before calling wait, creating a zombie state for the child
+        printf("[Parent] Parent process exiting, child will become orphan.\n");
+
+        wait(NULL);  // Parent waits for child, clearing zombie state
+
+        exit(0);  // Parent exits, orphaning the child process
+    }
+    return 0;
+}
